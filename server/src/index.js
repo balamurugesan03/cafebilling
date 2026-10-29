@@ -20,28 +20,34 @@ app.use(cors({ origin: process.env.CLIENT_URL?.split(',') || true }));
 app.use(express.json({ limit: '2mb' }));
 if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'));
 
-app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));
-app.use('/api/auth', authRoutes);
-app.use('/api/branches', branchRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/categories', categories);
-app.use('/api/products', products);
-app.use('/api/tables', tables);
-app.use('/api/expenses', expenses);
-app.use('/api/inventory', inventory);
-app.use('/api/customers', customers);
-app.use('/api/orders', orderRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/print', printRoutes);
+// Everything is mounted under BASE_PATH (e.g. /cafebilling in production)
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '');
+const router = express.Router();
+
+router.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));
+router.use('/api/auth', authRoutes);
+router.use('/api/branches', branchRoutes);
+router.use('/api/users', userRoutes);
+router.use('/api/categories', categories);
+router.use('/api/products', products);
+router.use('/api/tables', tables);
+router.use('/api/expenses', expenses);
+router.use('/api/inventory', inventory);
+router.use('/api/customers', customers);
+router.use('/api/orders', orderRoutes);
+router.use('/api/dashboard', dashboardRoutes);
+router.use('/api/reports', reportRoutes);
+router.use('/api/print', printRoutes);
 
 // Serve the built React app in production (client/dist)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(__dirname, '../../client/dist');
 if (fs.existsSync(dist)) {
-  app.use(express.static(dist));
-  app.get(/^(?!\/api).*/, (req, res) => res.sendFile(path.join(dist, 'index.html')));
+  router.use(express.static(dist));
+  router.get(/^(?!\/api).*/, (req, res) => res.sendFile(path.join(dist, 'index.html')));
 }
+
+app.use(BASE_PATH || '/', router);
 
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
 

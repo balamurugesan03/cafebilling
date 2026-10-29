@@ -1,7 +1,7 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || `${import.meta.env.BASE_URL}api` });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('bb_token');
@@ -16,7 +16,8 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401 && !err.config.url.includes('/auth/login')) {
       localStorage.removeItem('bb_token');
-      if (location.pathname !== '/login') location.href = '/login';
+      const loginPath = `${import.meta.env.BASE_URL}login`;
+      if (location.pathname !== loginPath) location.href = loginPath;
     }
     return Promise.reject(err);
   }
